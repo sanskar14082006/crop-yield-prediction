@@ -15,17 +15,22 @@ app = FastAPI(
     version="2.1.0"
 )
 
-# --- 3. CORS CONFIGURATION ---
+# --- 3. PRODUCTION CORS CONFIGURATION ---
+# We explicitly list your Vercel URL to clear the "AI Server Offline" hurdle.
+origins = [
+    "http://localhost:3000",
+    "https://crop-yield-prediction-sandy.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- 4. DATA VALIDATION SCHEMA (CRITICAL FIX) ---
-# This must exist BEFORE the @app.post function
+# --- 4. DATA VALIDATION SCHEMA ---
 class CropInput(BaseModel):
     Nitrogen: float = Field(..., ge=0, le=140)
     Phosphorus: float = Field(..., ge=5, le=145)
@@ -53,7 +58,7 @@ def home():
 @app.post("/predict")
 def predict_crop(data: CropInput):
     try:
-        # data.model_dump() uses the CropInput class defined above
+        # Pass the validated data to the inference logic
         crop, conf = model_utils.predictor.predict_all(
             data.model_dump(), 
             MODEL_PATH, 
