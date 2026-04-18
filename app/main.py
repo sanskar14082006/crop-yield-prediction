@@ -2,7 +2,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-import model_utils 
+from . import model_utils
 
 # --- 1. DYNAMIC PATH RESOLUTION ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
