@@ -1,3 +1,4 @@
+# --- Existing Frontend/Vercel Ignores ---
 # v0 sandbox internal files
 __v0_runtime_loader.js
 __v0_devtools.tsx
@@ -14,3 +15,22 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+
+# --- NEW: Python & Backend Ignores ---
+# Virtual Environment (CRITICAL: Do not upload your 500MB+ venv)
+venv_314/
+venv/
+env/
+
+# Python Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Distribution / Build
+dist/
+build/
+*.egg-info/

@@ -4,7 +4,15 @@ import numpy as np
 import joblib
 import os
 
-# ✅ ALIGNED: These must match your CSV and Notebook features exactly
+# --- 1. DYNAMIC PATH RESOLUTION ---
+# Identifies the 'app' folder where this script lives
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Default paths pointing to the new 'app/models/' structure
+DEFAULT_MODEL_PATH = os.path.join(BASE_DIR, "models", "crop_model.json")
+DEFAULT_SCALER_PATH = os.path.join(BASE_DIR, "models", "scaler.joblib")
+
+# ✅ ALIGNED: Must match your CSV and Notebook features exactly
 FEATURES = ['Nitrogen', 'Phosphorus', 'Potassium', 'Temperature', 'Humidity', 'pH_Value', 'Rainfall']
 
 CROP_MAP = {
@@ -16,43 +24,51 @@ CROP_MAP = {
 }
 
 class YieldPredictor:
-    def __init__(self, model_path="notebooks/crop_model.json", scaler_path="notebooks/scaler.joblib"):
-        self.model_path = model_path
-        self.scaler_path = scaler_path
+    def __init__(self):
         self.model = None
         self.scaler = None
 
-    def load_resources(self):
-        """Loads both the XGBoost model and the MinMaxScaler."""
+    def load_resources(self, model_path, scaler_path):
+        """
+        Loads the artifacts. Uses passed paths or defaults.
+        Ensures the AI Brain and Scaler are synchronized[cite: 32, 77].
+        """
         if self.model is None:
             self.model = xgb.XGBClassifier()
-            self.model.load_model(self.model_path)
+            # If no path is passed from main.py, use the resolved default
+            self.model.load_model(model_path or DEFAULT_MODEL_PATH)
             
         if self.scaler is None:
-            self.scaler = joblib.load(self.scaler_path)
+            # If no path is passed from main.py, use the resolved default
+            self.scaler = joblib.load(scaler_path or DEFAULT_SCALER_PATH)
             
-        print("✅ AI Brain and Scaler are synchronized and online.")
+        print("✅ System Check: AI Model and Scaler are synchronized and online.")
 
-    def predict_all(self, input_dict: dict):
-        self.load_resources()
+    def predict_all(self, input_dict: dict, model_path=None, scaler_path=None):
+        """
+        Main inference function called by the FastAPI backend[cite: 33, 71].
+        """
+        # Load resources before prediction
+        self.load_resources(model_path, scaler_path)
         
-        # 1. Convert raw input dictionary to a DataFrame
+        # 1. Convert raw input dictionary to a DataFrame for processing
         df_raw = pd.DataFrame([input_dict])[FEATURES]
 
-        # 2. ⚡ THE MAGIC FIX: Scale the data to 0-1 range
-        # This prevents the model from defaulting to 'Apple'
+        # 2. FEATURE NORMALIZATION: Scale data to 0-1 range [cite: 31, 77]
+        # This is a critical technical driver to prevent range bias.
         df_scaled = pd.DataFrame(self.scaler.transform(df_raw), columns=FEATURES)
 
-        # 3. Perform Inference
+        # 3. PERFORM INFERENCE
         pred_id = int(self.model.predict(df_scaled)[0])
         probs = self.model.predict_proba(df_scaled)
         
         confidence = np.max(probs) * 100
         crop_name = CROP_MAP.get(pred_id, "Unknown")
         
-        # Log to terminal so you can verify the math is working
-        print(f"DEBUG: Scaled Input -> Predicted: {crop_name} ({confidence:.2f}%)")
+        # Log to terminal for Technical Lead verification
+        print(f"DEBUG: Inference Success -> Recommended: {crop_name} ({confidence:.2f}%)")
         
         return crop_name.capitalize(), float(confidence)
 
+# Initialize a single instance to be used across the app
 predictor = YieldPredictor()
