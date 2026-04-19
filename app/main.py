@@ -15,17 +15,11 @@ app = FastAPI(
     version="2.1.0"
 )
 
-# --- 3. PRODUCTION CORS CONFIGURATION ---
-# We explicitly list your Vercel URL to clear the "AI Server Offline" hurdle.
-origins = [
-    "http://localhost:3000",
-    "https://crop-yield-prediction-sandy.vercel.app",
-]
-
+# --- 3. UNIVERSAL CORS CONFIGURATION (Presentation Mode) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],           # 🔓 Allows any website to talk to your AI
+    allow_credentials=False,       # ❌ Must be False when using wildcard "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )
