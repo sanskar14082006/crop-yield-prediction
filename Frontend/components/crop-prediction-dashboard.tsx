@@ -34,7 +34,7 @@ export default function CropPredictionDashboard() {
   const [isPredicting, setIsPredicting] = useState(false);
   const [prediction, setPrediction] = useState<{
     crop: string;
-    confidence: number; // Changed to string to handle the "%" from backend
+    confidence: number; 
   } | null>(null);
 
   // 3. Updated Parameter Handler
@@ -45,33 +45,38 @@ export default function CropPredictionDashboard() {
     }));
   };
 
-  // 4. Corrected Analyze Function
+  // 4. 🔥 HARDCODED PRODUCTION ANALYZE FUNCTION
+  // This guarantees the frontend finds the Render backend regardless of local environment settings.
   const handleAnalyze = async () => {
-  setIsPredicting(true);
-  try {
-    const response = await fetch("http://127.0.0.1:8000/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parameters), 
-    });
+    setIsPredicting(true);
+    try {
+      // 🚀 DIRECT CLOUD ENDPOINT
+      const API_URL = "https://agri-intel-plus-api.onrender.com/predict";
+      
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parameters), 
+      });
 
-    if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
 
-    const data = await response.json();
+      const data = await response.json();
 
-    // ✅ Update this part to save the numeric confidence_score
-    setPrediction({
-      crop: data.recommended_crop,
-      confidence: data.confidence_score // This is now a number like 99.52
-    });
+      // ✅ Map backend response to frontend state
+      setPrediction({
+        crop: data.recommended_crop,
+        confidence: data.confidence_score 
+      });
 
-  } catch (error) {
-    console.error("Connection Failed:", error);
-    alert("AI Server Offline!");
-  } finally {
-    setIsPredicting(false);
-  }
-};
+    } catch (error) {
+      console.error("Connection Failed:", error);
+      // Helpful alert for the Render "Free Tier" sleep behavior
+      alert("AI Server is waking up... Please wait 30 seconds and try again.");
+    } finally {
+      setIsPredicting(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-8">
@@ -102,7 +107,7 @@ export default function CropPredictionDashboard() {
           />
           
           <Button
-            onClick={handleAnalyze} // ✅ Corrected function name
+            onClick={handleAnalyze} 
             disabled={isPredicting}
             className="w-full mt-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-7 rounded-2xl transition-all duration-300 shadow-xl shadow-emerald-200 active:scale-[0.98] disabled:opacity-70"
           >
